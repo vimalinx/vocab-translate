@@ -25,6 +25,7 @@
 
   // 判断节点是否在代码块内（pre/code/kbd/samp），这些区域不扫描不高亮不翻译
   function isInsideCode(node) {
+    if (!node) return false;
     let el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node;
     while (el && el !== document.body) {
       const tag = el.tagName;
@@ -109,13 +110,15 @@
   }
 
   function showFloat(wordEl, word, translation, textNode, offset) {
+    if (!wordEl || !document.body) return; // 元素已脱离 DOM
     closeFloat();
     floatEl = document.createElement("div");
     floatEl.id = "vt-float";
 
-    // 继承被点击词的颜色
-    const computed = getComputedStyle(wordEl);
-    floatEl.style.color = computed.color;
+    try {
+      const computed = getComputedStyle(wordEl);
+      floatEl.style.color = computed.color;
+    } catch (e) {}
 
     // 解析释义：支持多种格式
     // DeepSeek: "音标：xxx\n词性 释义"
@@ -218,29 +221,22 @@
 
   // ---------- 点击监听 ----------
   document.addEventListener("click", (evt) => {
-    if (floatEl && floatEl.contains(evt.target)) return;
-    const tag = evt.target.tagName;
-    if (["INPUT", "TEXTAREA", "SELECT"].includes(tag) || evt.target.isContentEditable) {
-      closeFloat();
-      return;
-    }
-    if (isInsideCode(evt.target)) {
-      closeFloat();
-      return; // 代码块内点击 → 不翻译、不破坏代码
-    }
-    // 按钮/链接/表单控件：直接放行，不翻译不拦截，避免干扰点击
-    if (evt.target.closest("button") || evt.target.closest("a") || evt.target.closest("input,select,textarea,label")) {
-      closeFloat();
-      return;
-    }
+    try {
+      if (!evt.target || !evt.target.tagName) { closeFloat(); return; }
+      if (floatEl && floatEl.contains(evt.target)) return;
+      const tag = evt.target.tagName;
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(tag) || evt.target.isContentEditable) { closeFloat(); return; }
+      if (isInsideCode(evt.target)) { closeFloat(); return; }
+      if (evt.target.closest("button") || evt.target.closest("a") || evt.target.closest("input,select,textarea,label")) { closeFloat(); return; }
 
-    const result = getWordAt(evt);
-    if (!result) {
-      closeFloat();
-      return; // 点了空白 → 不翻译
+      const result = getWordAt(evt);
+      if (!result) { closeFloat(); return; }
+      evt.preventDefault();
+      translateAndShow(evt, result.word, result.sentence, evt.target, result.textNode, result.offset);
+    } catch (e) {
+      // SPA 动态 DOM 可能在事件处理过程中移除节点，静默处理
+      console.warn("Vocab Translate click handler:", e.message);
     }
-    evt.preventDefault();
-    translateAndShow(evt, result.word, result.sentence, evt.target, result.textNode, result.offset);
   }, true);
   // 鼠标移开当前 float 区域 → 立即淡出
   document.addEventListener("mousemove", (evt) => {
@@ -311,8 +307,9 @@
       }
     }
     if (!matched) return;
+    if (!node.parentNode) return; // 节点已脱离 DOM（SPA 动态更新）
     if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
-    node.parentNode.replaceChild(frag, node);
+    try { node.parentNode.replaceChild(frag, node); } catch (e) {}
   }
 
   function highlightWordInNode(el, word) {
