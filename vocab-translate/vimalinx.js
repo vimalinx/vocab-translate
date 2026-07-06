@@ -256,27 +256,37 @@ async function vimalinxLogout() {
 
 // ---------- 翻译：通过 api.vimalinx.com/v1（OpenAI 兼容） ----------
 
-async function translateByVimalinx(word) {
+async function translateByVimalinx(word, sentence) {
   const stored = await chrome.storage.local.get([VK.apikey, VK.baseUrl, VK.models]);
   if (!stored[VK.apikey]) {
     return { translation: "未登录 Vimalinx 账号，请先在设置页登录。", source: "error" };
   }
 
   const baseUrl = stored[VK.baseUrl] || VIMALINX.openaiBaseUrl;
-  // saas_special 组只能用 deepseek-v4-flash；default 组按配额
   const model = "deepseek-v4-flash";
 
-  const prompt =
-    `你是英汉词典。请给出英文单词 "${word}" 的中文释义，按下面的格式回答，不要任何多余内容：\n` +
-    `音标：[IPA]\n` +
-    `词性 释义1；释义2\n` +
-    `词性 释义1；释义2\n` +
-    `\n` +
-    `示例：\n` +
-    `音标：/ˌserənˈdɪpəti/\n` +
-    `名词 意外发现美好事物的能力；机缘巧合\n` +
-    `\n` +
-    `现在请解释 "${word}"：`;
+  let prompt;
+  if (sentence) {
+    prompt =
+      `你是英汉词典。在下面这个句子的语境中，给出单词 "${word}" 的准确中文释义。\n` +
+      `只给出在该语境下成立的意思，不要罗列所有义项。格式如下，不要多余内容：\n` +
+      `音标：[IPA]\n` +
+      `词性 该语境下的释义\n` +
+      `\n` +
+      `原句：${sentence}\n` +
+      `单词：${word}\n` +
+      `\n` +
+      `示例——原句 "Gene expression was upregulated." 单词 "expression"：\n` +
+      `音标：/ɪkˈspreʃn/\n` +
+      `名词 （基因）表达\n`;
+  } else {
+    prompt =
+      `你是英汉词典。请给出英文单词 "${word}" 的中文释义，按下面的格式回答，不要任何多余内容：\n` +
+      `音标：[IPA]\n` +
+      `词性 释义1；释义2\n` +
+      `\n` +
+      `现在请解释 "${word}"：`;
+  }
 
   const res = await fetch(baseUrl + "/chat/completions", {
     method: "POST",
@@ -300,7 +310,6 @@ async function translateByVimalinx(word) {
   }
   if (!res.ok) {
     const txt = await res.text().catch(() => "");
-    // 模型不允许（saas_special 组限制）
     if (txt.includes("No available channel") || txt.includes("group saas_special")) {
       return { translation: "当前账号组不允许调用此模型。", source: "error-model" };
     }

@@ -189,7 +189,7 @@
     // 先显示 loading（用临时占位，翻译回来后替换）
     showFloat(clickedEl, word, "…", textNode, offset);
     try {
-      const resp = await sendMsg({ type: "translate", word });
+      const resp = await sendMsg({ type: "translate", word, sentence });
       const info = resp || { translation: "无结果", source: "error" };
       showFloat(clickedEl, word, info.translation || "（无释义）", textNode, offset);
       sendMsg({ type: "record", word, translation: info.translation, sentence });

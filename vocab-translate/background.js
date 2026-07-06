@@ -21,18 +21,21 @@ async function getConfig() {
 }
 
 // 主翻译入口：按引擎分发
-async function translateWord(word) {
+async function translateWord(word, sentence) {
   word = word.trim().toLowerCase();
   if (!word) return { translation: "", source: "empty" };
+  sentence = (sentence || "").trim();
 
-  // 1) 内存缓存
-  if (CACHE.has(word)) return CACHE.get(word);
-  // 2) 已存词汇（离线命中）
-  const stored = await chrome.storage.local.get("v:" + word);
-  if (stored["v:" + word]) {
-    const r = { translation: stored["v:" + word].translation, source: "local" };
-    CACHE.set(word, r);
-    return r;
+  // 1) 内存缓存：只在无上下文时缓存（同一词在不同语境释义可能不同）
+  if (!sentence && CACHE.has(word)) return CACHE.get(word);
+  // 2) 已存词汇（离线命中）——仅无上下文时
+  if (!sentence) {
+    const stored = await chrome.storage.local.get("v:" + word);
+    if (stored["v:" + word]) {
+      const r = { translation: stored["v:" + word].translation, source: "local" };
+      CACHE.set(word, r);
+      return r;
+    }
   }
 
   // 3) 联网翻译：Vimalinx（统一账号）> DeepSeek（直连 key）> Google（回退）
@@ -40,43 +43,52 @@ async function translateWord(word) {
   const vmStatus = await vmGetStatus();
   let result = null;
 
-  // 优先：Vimalinx 统一账号（已登录走 api.vimalinx.com/v1）
   if (vmStatus.loggedIn) {
-    result = await translateByVimalinx(word).catch((e) => {
+    result = await translateByVimalinx(word, sentence).catch((e) => {
       console.warn("Vimalinx 失败，尝试 DeepSeek/Google:", e.message);
       return null;
     });
   }
-  // 回退 1：DeepSeek 直连 key（设置页填写）
   if (!result && cfg.engine === "deepseek" && cfg.apikey) {
-    result = await translateByDeepSeek(word, cfg).catch((e) => {
+    result = await translateByDeepSeek(word, cfg, sentence).catch((e) => {
       console.warn("DeepSeek 失败，回退 Google:", e.message);
       return null;
     });
   }
-  // 回退 2：Google Translate（免 key）
   if (!result) {
     result = await translateByGoogle(word);
   }
 
   if (CACHE.size > MAX_CACHE) CACHE.clear();
-  CACHE.set(word, result);
+  if (!sentence) CACHE.set(word, result); // 仅缓存无上下文结果
   return result;
 }
 
-// DeepSeek：用 LLM 生成词典级释义
-async function translateByDeepSeek(word, cfg) {
-  const prompt =
-    `你是英汉词典。请给出英文单词 "${word}" 的中文释义，按下面的格式回答，不要任何多余内容：\n` +
-    `音标：[IPA]\n` +
-    `词性 释义1；释义2\n` +
-    `词性 释义1；释义2\n` +
-    `\n` +
-    `示例：\n` +
-    `音标：/ˌserənˈdɪpəti/\n` +
-    `名词 意外发现美好事物的能力；机缘巧合\n` +
-    `\n` +
-    `现在请解释 "${word}"：`;
+// DeepSeek：用 LLM 在语境中生成释义
+async function translateByDeepSeek(word, cfg, sentence) {
+  // 带上下文：让 LLM 根据原句判断词义
+  let prompt;
+  if (sentence) {
+    prompt =
+      `你是英汉词典。在下面这个句子的语境中，给出单词 "${word}" 的准确中文释义。\n` +
+      `只给出在该语境下成立的意思，不要罗列所有义项。格式如下，不要多余内容：\n` +
+      `音标：[IPA]\n` +
+      `词性 该语境下的释义\n` +
+      `\n` +
+      `原句：${sentence}\n` +
+      `单词：${word}\n` +
+      `\n` +
+      `示例——原句 "Gene expression was upregulated." 单词 "expression"：\n` +
+      `音标：/ɪkˈspreʃn/\n` +
+      `名词 （基因）表达\n`;
+  } else {
+    prompt =
+      `你是英汉词典。请给出英文单词 "${word}" 的中文释义，按下面的格式回答，不要任何多余内容：\n` +
+      `音标：[IPA]\n` +
+      `词性 释义1；释义2\n` +
+      `\n` +
+      `现在请解释 "${word}"：`;
+  }
 
   const res = await fetch("https://api.deepseek.com/chat/completions", {
     method: "POST",
@@ -214,7 +226,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
       if (msg.type === "translate") {
-        const r = await translateWord(msg.word);
+        const r = await translateWord(msg.word, msg.sentence);
         sendResponse(r);
       } else if (msg.type === "record") {
         await recordWord(msg.word, msg.translation, msg.sentence);
