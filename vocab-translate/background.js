@@ -113,19 +113,19 @@ async function translateByDeepSeek(word, cfg, sentence) {
   return { translation: content, source: "DeepSeek" };
 }
 
-// Google Translate 公开端点（免 key 回退）
+// Google Translate：有语境时整句翻译优先（自动消歧），无语境时查词典义
 async function translateByGoogle(word, sentence) {
   try {
-    // 单词词典义
+    // 1) 单词词典义（始终查，作为基础释义）
     const url =
       "https://translate.googleapis.com/translate_a/single?client=gtx" +
       "&sl=en&tl=zh-CN&dt=t&dt=bd&q=" + encodeURIComponent(word);
     const res = await fetch(url, { method: "GET" });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-    let translation = "";
+    let wordTrans = "";
     if (Array.isArray(data) && Array.isArray(data[0])) {
-      translation = data[0].map((s) => (s && s[0] ? s[0] : "")).join("").trim();
+      wordTrans = data[0].map((s) => (s && s[0] ? s[0] : "")).join("").trim();
     }
     let defs = [];
     if (Array.isArray(data[1])) {
@@ -135,9 +135,9 @@ async function translateByGoogle(word, sentence) {
         for (const it of g[2]) if (it && it[0]) defs.push(pos ? `${pos} ${it[0]}` : it[0]);
       }
     }
-    if (defs.length && defs.join("；").length < 200) translation = translation || defs.join("；");
+    if (defs.length && defs.join("；").length < 200) wordTrans = wordTrans || defs.join("；");
 
-    // 有上下文时：整句翻译作为语境参考，追加到释义后面
+    // 2) 有上下文：整句翻译（Google 在整句级别自动消歧）
     if (sentence && sentence.length > 5) {
       try {
         const sUrl =
@@ -150,14 +150,15 @@ async function translateByGoogle(word, sentence) {
           if (Array.isArray(sData) && Array.isArray(sData[0])) {
             sentTrans = sData[0].map((s) => (s && s[0] ? s[0] : "")).join("").trim();
           }
+          // 整句翻译作为主释义（含语境义），单词义作为补充
           if (sentTrans) {
-            translation = translation + "\n语境：" + sentTrans;
+            return { translation: wordTrans + "\n" + sentTrans, source: "Google" };
           }
         }
-      } catch (e) { /* 整句翻译失败不影响单词翻译 */ }
+      } catch (e) { /* 整句翻译失败则只返回单词义 */ }
     }
 
-    return { translation: translation || "（无释义）", source: "Google" };
+    return { translation: wordTrans || "（无释义）", source: "Google" };
   } catch (e) {
     return { translation: "翻译失败：" + e.message, source: "error" };
   }

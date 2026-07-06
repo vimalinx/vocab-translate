@@ -117,15 +117,29 @@
     const computed = getComputedStyle(wordEl);
     floatEl.style.color = computed.color;
 
-    // 解析释义：提取音标（如有）和简短释义首行
-    let phon = "", meaning = translation;
-    const lines = translation.split("\n");
-    const phonMatch = translation.match(/音标[:：]\s*([^\n]+)/);
-    if (phonMatch) phon = phonMatch[1].trim();
-    const meaningLine = lines.find((l) => /^[a-zA-Z]/.test(l) && !l.startsWith("音标"));
-    if (meaningLine) meaning = meaningLine;
+    // 解析释义：支持多种格式
+    // DeepSeek: "音标：xxx\n词性 释义"
+    // Google+语境: "词义\n整句翻译"
+    // Google无语境: "词义"
+    let display = translation;
+    const lines = translation.split("\n").filter((l) => l.trim());
 
-    floatEl.innerHTML = `<span class="vt-float-text">${escapeHtml(phon ? phon + " " + meaning : meaning)}</span>`;
+    if (lines.length >= 2) {
+      // 多行：第一行是词义，第二行是语境句翻译 → 都显示，用分隔
+      display = lines[0] + " · " + lines[1];
+    } else {
+      // 单行：提取音标（DeepSeek 格式）
+      const phonMatch = translation.match(/音标[:：]\s*([^\n]+)/);
+      if (phonMatch) {
+        const phon = phonMatch[1].trim();
+        const meaningLine = lines.find((l) => /^[a-zA-Z]/.test(l) && !l.startsWith("音标"));
+        display = phon + " " + (meaningLine || lines[0] || "");
+      }
+    }
+    // 超长截断（浮窗不能太宽）
+    if (display.length > 80) display = display.slice(0, 78) + "…";
+
+    floatEl.innerHTML = `<span class="vt-float-text">${escapeHtml(display)}</span>`;
     document.body.appendChild(floatEl);
 
     // 精确定位：用点击到的那个词的 Range rect，而不是整个元素
