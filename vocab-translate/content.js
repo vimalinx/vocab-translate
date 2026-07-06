@@ -290,6 +290,7 @@
 
   function highlightTextNode(node, set) {
     if (!node || !node.nodeValue || !node.parentNode) return; // SPA 动态 DOM：节点可能已移除
+    const text = node.nodeValue;
     const re = /\b([a-zA-Z][a-zA-Z'-]*)\b/g;
     let m, last = 0;
     const frag = document.createDocumentFragment();
