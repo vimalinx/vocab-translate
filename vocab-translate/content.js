@@ -240,12 +240,13 @@
   }, true);
   // 鼠标移开当前 float 区域 → 立即淡出
   document.addEventListener("mousemove", (evt) => {
-    if (!floatEl || !hideTimer) return;
-    // 如果鼠标离 float 元素和点击词都很远，提前淡出
-    const fRect = floatEl.getBoundingClientRect();
-    const inFloat = evt.clientX >= fRect.left - 30 && evt.clientX <= fRect.right + 30 &&
-                    evt.clientY >= fRect.top - 30 && evt.clientY <= fRect.bottom + 30;
-    if (!inFloat) closeFloat();
+    try {
+      if (!floatEl || !hideTimer) return;
+      const fRect = floatEl.getBoundingClientRect();
+      const inFloat = evt.clientX >= fRect.left - 30 && evt.clientX <= fRect.right + 30 &&
+                      evt.clientY >= fRect.top - 30 && evt.clientY <= fRect.bottom + 30;
+      if (!inFloat) closeFloat();
+    } catch (e) {}
   }, { passive: true });
 
   window.addEventListener("scroll", closeFloat, true);
@@ -288,7 +289,7 @@
   }
 
   function highlightTextNode(node, set) {
-    const text = node.nodeValue;
+    if (!node || !node.nodeValue || !node.parentNode) return; // SPA 动态 DOM：节点可能已移除
     const re = /\b([a-zA-Z][a-zA-Z'-]*)\b/g;
     let m, last = 0;
     const frag = document.createDocumentFragment();
@@ -377,8 +378,7 @@
     if (rescanTimer) return;
     rescanTimer = setTimeout(() => {
       rescanTimer = null;
-      prefetchPageWords();
-      highlightSeenWords();
+      try { prefetchPageWords(); highlightSeenWords(); } catch (e) {}
     }, 1500);
   });
   try { mo.observe(document.body, { childList: true, subtree: true }); } catch (e) {}
