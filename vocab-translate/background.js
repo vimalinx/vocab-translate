@@ -224,6 +224,7 @@ async function translateByGoogle(word, sentence) {
     const res = await fetch(url, { method: "GET" });
     console.log("[VT] Google fetch done:", res.status);
     if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
     let wordTrans = "";
     if (Array.isArray(data) && Array.isArray(data[0])) {
       wordTrans = data[0].map((s) => (s && s[0] ? s[0] : "")).join("").trim();
