@@ -56,7 +56,7 @@ async function translateWord(word, sentence) {
     });
   }
   if (!result) {
-    result = await translateByGoogle(word);
+    result = await translateByGoogle(word, sentence);
   }
 
   if (CACHE.size > MAX_CACHE) CACHE.clear();
@@ -114,8 +114,9 @@ async function translateByDeepSeek(word, cfg, sentence) {
 }
 
 // Google Translate 公开端点（免 key 回退）
-async function translateByGoogle(word) {
+async function translateByGoogle(word, sentence) {
   try {
+    // 单词词典义
     const url =
       "https://translate.googleapis.com/translate_a/single?client=gtx" +
       "&sl=en&tl=zh-CN&dt=t&dt=bd&q=" + encodeURIComponent(word);
@@ -135,6 +136,27 @@ async function translateByGoogle(word) {
       }
     }
     if (defs.length && defs.join("；").length < 200) translation = translation || defs.join("；");
+
+    // 有上下文时：整句翻译作为语境参考，追加到释义后面
+    if (sentence && sentence.length > 5) {
+      try {
+        const sUrl =
+          "https://translate.googleapis.com/translate_a/single?client=gtx" +
+          "&sl=en&tl=zh-CN&dt=t&q=" + encodeURIComponent(sentence);
+        const sRes = await fetch(sUrl, { method: "GET" });
+        if (sRes.ok) {
+          const sData = await sRes.json();
+          let sentTrans = "";
+          if (Array.isArray(sData) && Array.isArray(sData[0])) {
+            sentTrans = sData[0].map((s) => (s && s[0] ? s[0] : "")).join("").trim();
+          }
+          if (sentTrans) {
+            translation = translation + "\n语境：" + sentTrans;
+          }
+        }
+      } catch (e) { /* 整句翻译失败不影响单词翻译 */ }
+    }
+
     return { translation: translation || "（无释义）", source: "Google" };
   } catch (e) {
     return { translation: "翻译失败：" + e.message, source: "error" };
