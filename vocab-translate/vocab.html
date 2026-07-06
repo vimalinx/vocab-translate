@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Lexicon · Vocab Translate</title>
+<link rel="stylesheet" href="layout.css" />
+<style>
+  .freq-bar { display: inline-block; height: 4px; background: var(--accent); margin-right: 6px; vertical-align: middle; }
+  .word-cell { font-family: "Instrument Serif", serif; font-size: 21px; font-weight: 400; letter-spacing: -0.01em; }
+  .translation-text { font-size: 15px; line-height: 1.6; white-space: pre-wrap; color: var(--ink); }
+  .sentence-text { font-size: 14px; color: var(--ink-soft); margin-top: 6px; line-height: 1.5; font-family: "Instrument Serif", serif; font-style: italic; }
+  .edit-input { width: 100%; padding: 6px 10px; border: 1px solid var(--line); font-family: inherit; font-size: 15px; background: white; display: none; }
+  tr.editing .translation-text { display: none; }
+  tr.editing .edit-input { display: block; }
+  .empty-state { text-align: center; padding: 80px 20px; color: var(--ink-faint); }
+  .empty-state .glyph { font-family: "Instrument Serif", serif; font-size: 48px; color: var(--line); font-style: italic; margin-bottom: 16px; }
+  .table-wrap { background: white; border: 1px solid var(--line); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <span class="brand-mark">V</span>
+      <span class="brand-name">Vocab</span>
+    </div>
+    <div class="nav-section">Library</div>
+    <a href="vocab.html" class="nav-item active"><span class="ico">▢</span>Lexicon</a>
+    <a href="quiz.html" class="nav-item"><span class="ico">◈</span>Recall Test</a>
+    <div class="nav-section">System</div>
+    <a href="options.html" class="nav-item"><span class="ico">⚙</span>Settings</a>
+    <div class="sidebar-footer">
+      <div class="stat" id="sidebarStat">— words · — lookups</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <h1>Lexicon</h1>
+      <p id="sub">Loading…</p>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="filter" class="input" placeholder="Filter words or meanings…" style="width:260px" />
+      <select id="sort" class="select">
+        <option value="count">By frequency</option>
+        <option value="last">Most recent</option>
+        <option value="word">Alphabetical</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn" id="openQuiz">Test recall</button>
+      <button class="btn" id="export">Export</button>
+    </div>
+    <div class="table-wrap">
+      <table id="tbl" class="table">
+        <thead><tr>
+          <th style="width:36px">№</th>
+          <th>Word</th>
+          <th>Definition</th>
+          <th style="width:80px;text-align:center">Freq</th>
+          <th>Context</th>
+          <th style="width:90px"></th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div id="empty" class="empty-state" style="display:none">
+      <div class="glyph">a · 译 · z</div>
+      <p>No words collected yet.<br/>Click any word on a web page to begin.</p>
+    </div>
+    <p style="margin-top:28px"><a href="#" id="back">← back</a></p>
+  </main>
+</div>
+<script src="vocab.js"></script>
+</body>
+</html>

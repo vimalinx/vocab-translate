@@ -1,0 +1,43 @@
+/* content.css — Field Notes inline: minimal seen-word + float */
+
+.vt-seen {
+  cursor: help;
+  text-decoration: underline;
+  text-decoration-color: rgba(212, 71, 31, 0.35);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 2px;
+  text-decoration-skip-ink: none;
+  transition: text-decoration-color 0.15s;
+}
+.vt-seen:hover {
+  text-decoration-color: #d4471f;
+  text-decoration-thickness: 2px;
+}
+
+#vt-float {
+  position: absolute;
+  z-index: 2147483647;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease-in;
+  letter-spacing: 0;
+}
+#vt-float.vt-show { opacity: 1; transition: opacity 0.2s ease-out; }
+#vt-float.vt-fading { opacity: 0; transition: opacity 0.9s ease-out; }
+#vt-float .vt-float-text { font-style: normal; }
+#vt-float .vt-float-phon {
+  opacity: 0.5;
+  font-size: 0.82em;
+  margin-right: 0.4em;
+  font-weight: 400;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}

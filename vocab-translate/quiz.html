@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Recall · Vocab Translate</title>
+<link rel="stylesheet" href="layout.css" />
+<style>
+  .qcard {
+    background: white; border: 1px solid var(--line);
+    padding: 28px 32px; margin-bottom: 14px;
+    animation: fadeUp 0.3s ease-out;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .qnum { font-family: "Geist Mono", monospace; font-size: 12px; color: var(--ink-faint); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.1em; }
+  .question-text { font-family: "Instrument Serif", serif; font-size: 24px; line-height: 1.5; margin-bottom: 28px; color: var(--ink); }
+  .blank {
+    display: inline; padding: 1px 4px;
+    border-bottom: 2px solid var(--accent);
+    font-weight: 400; color: var(--accent); background: var(--accent-soft);
+    font-family: "Instrument Serif", serif; font-style: italic;
+  }
+  .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .quiz-opt {
+    padding: 16px 20px; border: 1px solid var(--line); background: var(--paper);
+    cursor: pointer; font-family: inherit; font-size: 15.5px; transition: all 0.1s;
+    text-align: left; color: var(--ink); border-radius: 0; line-height: 1.4;
+  }
+  .quiz-opt:hover:not(:disabled) { border-color: var(--accent); background: white; }
+  .quiz-opt.correct { background: var(--green-soft); border-color: var(--green); color: #1a5a26; font-weight: 500; }
+  .quiz-opt.wrong { background: var(--red-soft); border-color: var(--red); color: #8a2820; }
+  .quiz-opt:disabled { cursor: default; }
+  .explain { margin-top: 14px; padding: 12px 16px; background: var(--green-soft); border-left: 3px solid var(--green); font-size: 13px; display: none; line-height: 1.5; }
+  .explain .word { font-family: "Instrument Serif", serif; font-size: 16px; font-weight: 400; font-style: italic; }
+  .explain .freq { font-size: 10px; color: var(--ink-faint); font-family: "Geist Mono", monospace; text-transform: uppercase; letter-spacing: 0.08em; margin-left: 8px; }
+  .done-state { text-align: center; padding: 56px 20px; }
+  .done-state .big { font-family: "Instrument Serif", serif; font-size: 64px; font-weight: 400; color: var(--accent); letter-spacing: -0.03em; line-height: 1; }
+  .done-state .label { font-family: "Geist Mono", monospace; font-size: 10px; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.12em; margin-top: 6px; }
+  .done-state .verdict { font-family: "Instrument Serif", serif; font-style: italic; font-size: 18px; color: var(--ink-soft); margin: 24px 0; }
+  .qhead-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+  .score-badge { font-family: "Geist Mono", monospace; font-size: 13px; font-weight: 500; color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">V</span><span class="brand-name">Vocab</span></div>
+    <div class="nav-section">Library</div>
+    <a href="vocab.html" class="nav-item"><span class="ico">▢</span>Lexicon</a>
+    <a href="quiz.html" class="nav-item active"><span class="ico">◈</span>Recall Test</a>
+    <div class="nav-section">System</div>
+    <a href="options.html" class="nav-item"><span class="ico">⚙</span>Settings</a>
+    <div class="sidebar-footer"><div class="stat">Examination mode</div></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Recall</h1>
+      <p id="sub">Select the correct meaning from context.</p>
+    </div>
+    <div id="setup" class="card">
+      <div class="toolbar" style="margin-bottom:16px">
+        <label class="field-label" style="margin:0">Questions</label>
+        <select id="qcount" class="select"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="9999">All</option></select>
+        <label class="field-label" style="margin:0 0 0 12px">Mode</label>
+        <select id="qmode" class="select"><option value="sentence" selected>Cloze</option><option value="word">Word→meaning</option><option value="reverse">Meaning→word</option></select>
+        <div class="spacer"></div>
+        <button class="btn btn-primary" id="start">Begin</button>
+      </div>
+      <p class="field-hint">At least 4 words with definitions needed.</p>
+    </div>
+    <div id="quiz" style="display:none">
+      <div class="qhead-row">
+        <span class="score-badge" id="score">0 / 0</span>
+        <button class="btn btn-sm btn-ghost" id="restart">Restart</button>
+      </div>
+      <div id="questions"></div>
+    </div>
+    <div id="result" class="card done-state" style="display:none">
+      <div class="big" id="finalScore">0%</div>
+      <div class="label">Score</div>
+      <p class="verdict" id="finalText"></p>
+      <div style="display:flex;gap:12px;justify-content:center">
+        <button class="btn btn-primary" id="again">Try again</button>
+        <a href="vocab.html" class="btn">Lexicon</a>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="quiz.js"></script>
+</body>
+</html>

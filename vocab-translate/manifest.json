@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Vocab Translate — 划词翻译与词汇本",
+  "version": "1.0.0",
+  "description": "点击单词查看中文释义，自动记录词汇与词频，已查单词淡色高亮，并能用原句做释义选择题测验。",
+  "permissions": ["storage", "activeTab", "identity"],
+  "host_permissions": [
+    "https://translate.googleapis.com/*",
+    "https://auth.vimalinx.com/*",
+    "https://api.deepseek.com/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Vocab Translate",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["vocab.html", "quiz.html", "options.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

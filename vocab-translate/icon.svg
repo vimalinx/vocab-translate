@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1d4ed8"/>
+    </linearGradient>
+    <linearGradient id="page" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#f0f4ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- 圆角背景 -->
+  <rect width="128" height="128" rx="28" fill="url(#bg)"/>
+
+  <!-- 打开的书 -->
+  <path d="M 30 40 Q 30 34 36 34 L 60 34 Q 64 34 64 38 L 64 92 Q 64 88 60 88 L 36 88 Q 30 88 30 94 Z"
+        fill="url(#page)" opacity="0.95"/>
+  <path d="M 98 40 Q 98 34 92 34 L 68 34 Q 64 34 64 38 L 64 92 Q 64 88 68 88 L 92 88 Q 98 88 98 94 Z"
+        fill="url(#page)" opacity="0.85"/>
+
+  <!-- 书脊阴影 -->
+  <line x1="64" y1="36" x2="64" y2="90" stroke="#2563eb" stroke-width="1.5" opacity="0.2"/>
+
+  <!-- 字母 "A" 渐变为中文 -->
+  <text x="46" y="68" font-family="Georgia,serif" font-size="26" font-weight="700" fill="#2563eb" text-anchor="middle">A</text>
+  <!-- 箭头 -->
+  <path d="M 56 64 L 60 64 M 58 62 L 60 64 L 58 66" stroke="#64748b" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  <!-- "译" 字 -->
+  <text x="78" y="70" font-family="'PingFang SC','Noto Sans CJK SC',sans-serif" font-size="22" font-weight="700" fill="#1e40af" text-anchor="middle">译</text>
+
+  <!-- 高亮小圆点（已查词标记） -->
+  <circle cx="104" cy="36" r="6" fill="#fbbf24" opacity="0.9"/>
+  <circle cx="104" cy="36" r="3.5" fill="#f59e0b"/>
+
+  <!-- 书底阴影 -->
+  <ellipse cx="64" cy="94" rx="36" ry="3" fill="#000" opacity="0.08"/>
+</svg>

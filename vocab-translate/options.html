@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>Settings · Vocab Translate</title>
+<link rel="stylesheet" href="layout.css" />
+<style>
+  .section-divider { font-family: "Geist Mono", monospace; font-size: 10px; font-weight: 500; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.1em; margin: 28px 0 12px; }
+  .vm-status-box { padding: 12px 14px; font-size: 13px; margin: 12px 0; background: white; border: 1px solid var(--line); }
+  .vm-status-box.online { background: var(--green-soft); border-color: var(--green); color: #1a5a26; }
+  .vm-status-box.offline { background: var(--paper-2); color: var(--ink-soft); }
+  .danger-card { margin-top: 32px; padding: 16px 18px; border: 1px solid var(--red); background: var(--red-soft); }
+  .danger-card h3 { font-size: 12px; color: var(--red); margin: 0 0 10px; font-weight: 500; font-family: "Geist Mono", monospace; text-transform: uppercase; letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-mark">V</span><span class="brand-name">Vocab</span></div>
+    <div class="nav-section">Library</div>
+    <a href="vocab.html" class="nav-item"><span class="ico">▢</span>Lexicon</a>
+    <a href="quiz.html" class="nav-item"><span class="ico">◈</span>Recall Test</a>
+    <div class="nav-section">System</div>
+    <a href="options.html" class="nav-item active"><span class="ico">⚙</span>Settings</a>
+    <div class="sidebar-footer"><div class="stat">Engine config</div></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Settings</h1>
+      <p>Translation engine and credentials.</p>
+    </div>
+    <div class="section-divider">Vimalinx Account</div>
+    <div class="card" style="margin-bottom:8px">
+      <p class="field-hint" style="margin-bottom:14px">Translations route through Vimalinx unified account via <code class="inline">deepseek-v4-flash</code>. Auth handled by Logto — this extension never touches your password.</p>
+      <div id="vmStatus" class="vm-status-box">Loading…</div>
+      <div class="field-group">
+        <label class="field-label" for="vmClientId">Logto Public Client ID <span style="font-weight:400;color:var(--ink-faint)">(optional)</span></label>
+        <input type="text" id="vmClientId" class="input" placeholder="e.g. nexusnative or your SPA client_id" />
+        <p class="field-hint">Requires a Logto <b>public client</b> (SPA/Native, PKCE, no secret). Redirect URI: <code class="inline" id="redirectHint">https://&lt;ext-id&gt;.chromiumapp.org/</code></p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="vmLogin">Sign in</button>
+        <button class="btn" id="vmLogout" style="display:none">Sign out</button>
+      </div>
+    </div>
+    <div class="section-divider">DeepSeek Direct — Fallback</div>
+    <div class="card">
+      <p class="field-hint" style="margin-bottom:16px">Used when not signed into Vimalinx. Falls back to Google Translate if both unavailable.</p>
+      <div class="field-group">
+        <label class="field-label" for="apikey">API Key</label>
+        <input type="password" id="apikey" class="input" placeholder="sk-..." autocomplete="off" />
+        <p class="field-hint">From <a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com/api_keys</a>. Stored locally only.</p>
+      </div>
+      <div class="field-group">
+        <label class="field-label" for="model">Model</label>
+        <input type="text" id="model" class="input" placeholder="deepseek-v4-flash" />
+        <p class="field-hint">Vimalinx uses <code class="inline">deepseek-v4-flash</code> only. Direct mode also accepts <code class="inline">deepseek-v4-pro</code>.</p>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary" id="save">Save</button>
+        <button class="btn" id="test">Test connection</button>
+      </div>
+      <div id="status" class="status-box"></div>
+    </div>
+    <div class="danger-card">
+      <h3>Clear credentials</h3>
+      <button class="btn btn-danger" id="clearKey">Remove key from this device</button>
+    </div>
+  </main>
+</div>
+<script src="options.js"></script>
+</body>
+</html>
