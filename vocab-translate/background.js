@@ -1,10 +1,109 @@
 // background.js — Service Worker
-// 翻译缓存 + 存储操作 + 消息中枢
-import { vimalinxLogin, vimalinxLogout, vmGetStatus, translateByVimalinx } from "./vimalinx.js";
-
+// 翻译缓存 + 存储操作 + 消息中枢 + Vimalinx 账号集成（内联，非 module）
 
 const CACHE = new Map();
 const MAX_CACHE = 500;
+
+// ========== Vimalinx 统一账号集成（从 vimalinx.js 内联）==========
+const VIMALINX = {
+  issuer: "https://auth.vimalinx.com/oidc",
+  authEndpoint: "https://auth.vimalinx.com/oidc/auth",
+  tokenEndpoint: "https://auth.vimalinx.com/oidc/token",
+  bootstrapUrl: "https://api.vimalinx.com/api/vimalinx/client/bootstrap",
+  openaiBaseUrl: "https://api.vimalinx.com/v1",
+  statusUrl: "https://api.vimalinx.com/api/status",
+  defaultClientId: "",
+  scope: "openid profile email offline_access",
+};
+const VK = {
+  clientId: "vm:clientId", apikey: "vm:apikey", baseUrl: "vm:baseUrl",
+  quota: "vm:quota", models: "vm:models", user: "vm:user",
+  refreshToken: "vm:refreshToken", group: "vm:group", loggedIn: "vm:loggedIn",
+};
+
+function randomBytes(len) { const arr = new Uint8Array(len); crypto.getRandomValues(arr); return arr; }
+function base64url(bytes) { return btoa(String.fromCharCode(...bytes)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); }
+async function sha256(input) { const data = new TextEncoder().encode(input); const hash = await crypto.subtle.digest("SHA-256", data); return new Uint8Array(hash); }
+async function generatePkce() { const verifier = base64url(randomBytes(32)); const challenge = base64url(await sha256(verifier)); return { verifier, challenge }; }
+function generateState() { return base64url(randomBytes(16)); }
+
+async function vmGetConfig() {
+  const cfg = await chrome.storage.local.get({ "vm:clientId": VIMALINX.defaultClientId });
+  return { clientId: cfg["vm:clientId"] || VIMALINX.defaultClientId };
+}
+
+async function vimalinxLogin() {
+  const { clientId } = await vmGetConfig();
+  if (!clientId) throw new Error("未配置 Logto 公共客户端 ID。");
+  const redirectUri = chrome.identity.getRedirectURL();
+  const pkce = await generatePkce();
+  const state = generateState();
+  await chrome.storage.local.set({ "vm:pkceVerifier": pkce.verifier, "vm:pkceState": state, "vm:redirectUri": redirectUri });
+  const authUrl = VIMALINX.authEndpoint + "?response_type=code&client_id=" + encodeURIComponent(clientId) + "&redirect_uri=" + encodeURIComponent(redirectUri) + "&scope=" + encodeURIComponent(VIMALINX.scope) + "&state=" + encodeURIComponent(state) + "&code_challenge=" + encodeURIComponent(pkce.challenge) + "&code_challenge_method=S256";
+  const callbackUrl = await chrome.identity.launchWebAuthFlow({ url: authUrl, interactive: true });
+  if (!callbackUrl) throw new Error("登录被取消");
+  const url = new URL(callbackUrl);
+  const code = url.searchParams.get("code");
+  const st = url.searchParams.get("state");
+  if (url.searchParams.get("error")) throw new Error("Logto 登录失败：" + (url.searchParams.get("error_description") || url.searchParams.get("error")));
+  if (!code) throw new Error("回调缺少 authorization code");
+  const stored = await chrome.storage.local.get(["vm:pkceState", "vm:pkceVerifier", "vm:redirectUri"]);
+  if (st !== stored["vm:pkceState"]) throw new Error("state 校验失败");
+  const body = new URLSearchParams({ grant_type: "authorization_code", code, redirect_uri: stored["vm:redirectUri"], client_id: (await vmGetConfig()).clientId, code_verifier: stored["vm:pkceVerifier"] });
+  const tokenRes = await fetch(VIMALINX.tokenEndpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body });
+  if (!tokenRes.ok) throw new Error("Token endpoint 失败：HTTP " + tokenRes.status);
+  const tokens = await tokenRes.json();
+  await chrome.storage.local.remove(["vm:pkceVerifier", "vm:pkceState", "vm:redirectUri"]);
+  const jwt = tokens.id_token || tokens.access_token;
+  const bsRes = await fetch(VIMALINX.bootstrapUrl, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + jwt }, body: JSON.stringify({ group: "default", token_name: "vocab-translate-ext" }) });
+  if (!bsRes.ok) throw new Error("Bootstrap 失败：HTTP " + bsRes.status);
+  const bsJson = await bsRes.json();
+  if (!bsJson.ok || !bsJson.data) throw new Error("Bootstrap 返回格式异常");
+  const d = bsJson.data;
+  await chrome.storage.local.set({
+    [VK.apikey]: d.api_key, [VK.baseUrl]: d.base_url || VIMALINX.openaiBaseUrl,
+    [VK.quota]: { total: d.quota, remain: d.token_remain_quota ?? d.quota, perUnit: d.quota_per_unit, displayType: d.quota_display_type, price: d.price },
+    [VK.models]: d.models || [], [VK.group]: d.group || "default",
+    [VK.user]: { id: d.user_id, username: d.username, displayName: d.display_name, email: d.email, avatarUrl: d.avatar_url || d.avatarUrl },
+    [VK.loggedIn]: true,
+  });
+  return d;
+}
+
+async function vmGetStatus() {
+  const s = await chrome.storage.local.get([VK.loggedIn, VK.apikey, VK.user, VK.quota, VK.models, VK.group]);
+  return { loggedIn: !!s[VK.loggedIn] && !!s[VK.apikey], user: s[VK.user] || null, quota: s[VK.quota] || null, models: s[VK.models] || [], group: s[VK.group] || "default" };
+}
+
+async function vimalinxLogout() {
+  await chrome.storage.local.remove([VK.apikey, VK.baseUrl, VK.quota, VK.models, VK.user, VK.group, VK.loggedIn, VK.refreshToken]);
+}
+
+async function translateByVimalinx(word, sentence) {
+  const stored = await chrome.storage.local.get([VK.apikey, VK.baseUrl, VK.models]);
+  if (!stored[VK.apikey]) return { translation: "未登录 Vimalinx 账号。", source: "error" };
+  const baseUrl = stored[VK.baseUrl] || VIMALINX.openaiBaseUrl;
+  const model = "deepseek-v4-flash";
+  let prompt;
+  if (sentence) {
+    prompt = `你是英汉词典。在下面这个句子的语境中，给出单词 "${word}" 的准确中文释义。\n只给出在该语境下成立的意思，不要罗列所有义项。格式如下，不要多余内容：\n音标：[IPA]\n词性 该语境下的释义\n\n原句：${sentence}\n单词：${word}\n\n示例——原句 "Gene expression was upregulated." 单词 "expression"：\n音标：/ɪkˈspreʃn/\n名词 （基因）表达`;
+  } else {
+    prompt = `你是英汉词典。请给出英文单词 "${word}" 的中文释义，按下面的格式回答，不要任何多余内容：\n音标：[IPA]\n词性 释义1；释义2\n\n现在请解释 "${word}"：`;
+  }
+  const res = await fetch(baseUrl + "/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer " + stored[VK.apikey] },
+    body: JSON.stringify({ model, messages: [{ role: "user", content: prompt }], temperature: 0, max_tokens: 400 }),
+  });
+  if (res.status === 401) return { translation: "AI 凭据已失效，请重新登录 Vimalinx。", source: "error-auth" };
+  if (res.status === 429 || res.status === 402) return { translation: "AI 额度不足。", source: "error-quota" };
+  if (!res.ok) { const txt = await res.text().catch(() => ""); return { translation: `翻译失败：HTTP ${res.status}`, source: "error" }; }
+  const data = await res.json();
+  const content = data?.choices?.[0]?.message?.content?.trim();
+  if (!content) return { translation: "AI 返回空内容。", source: "error" };
+  return { translation: content, source: "Vimalinx" };
+}
+// ========== Vimalinx 集成结束 ==========
 
 // 读取引擎配置
 async function getConfig() {
@@ -41,6 +140,7 @@ async function translateWord(word, sentence) {
   // 3) 联网翻译：Vimalinx（统一账号）> DeepSeek（直连 key）> Google（回退）
   const cfg = await getConfig();
   const vmStatus = await vmGetStatus();
+  console.log("[VT] engines: vm=" + vmStatus.loggedIn, "ds=" + (cfg.engine === "deepseek" && !!cfg.apikey), "google=always");
   let result = null;
 
   if (vmStatus.loggedIn) {
@@ -120,9 +220,10 @@ async function translateByGoogle(word, sentence) {
     const url =
       "https://translate.googleapis.com/translate_a/single?client=gtx" +
       "&sl=en&tl=zh-CN&dt=t&dt=bd&q=" + encodeURIComponent(word);
+    console.log("[VT] Google fetch start:", word);
     const res = await fetch(url, { method: "GET" });
+    console.log("[VT] Google fetch done:", res.status);
     if (!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json();
     let wordTrans = "";
     if (Array.isArray(data) && Array.isArray(data[0])) {
       wordTrans = data[0].map((s) => (s && s[0] ? s[0] : "")).join("").trim();
@@ -249,7 +350,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
     try {
       if (msg.type === "translate") {
+        console.log("[VT] translate request:", msg.word, "sentence?", !!msg.sentence);
         const r = await translateWord(msg.word, msg.sentence);
+        console.log("[VT] translate result:", msg.word, "->", r.source, r.translation?.slice(0,40));
         sendResponse(r);
       } else if (msg.type === "record") {
         await recordWord(msg.word, msg.translation, msg.sentence);
