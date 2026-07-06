@@ -121,14 +121,13 @@
     // DeepSeek: "音标：xxx\n词性 释义"
     // Google+语境: "词义\n整句翻译"
     // Google无语境: "词义"
+    if (!translation || typeof translation !== "string") translation = "…";
     let display = translation;
     const lines = translation.split("\n").filter((l) => l.trim());
 
     if (lines.length >= 2) {
-      // 多行：第一行是词义，第二行是语境句翻译 → 都显示，用分隔
       display = lines[0] + " · " + lines[1];
     } else {
-      // 单行：提取音标（DeepSeek 格式）
       const phonMatch = translation.match(/音标[:：]\s*([^\n]+)/);
       if (phonMatch) {
         const phon = phonMatch[1].trim();
@@ -136,11 +135,12 @@
         display = phon + " " + (meaningLine || lines[0] || "");
       }
     }
-    // 超长截断（浮窗不能太宽）
     if (display.length > 80) display = display.slice(0, 78) + "…";
 
-    floatEl.innerHTML = `<span class="vt-float-text">${escapeHtml(display)}</span>`;
-    document.body.appendChild(floatEl);
+    try {
+      floatEl.innerHTML = `<span class="vt-float-text">${escapeHtml(display)}</span>`;
+      document.body.appendChild(floatEl);
+    } catch (e) { return; }
 
     // 精确定位：用点击到的那个词的 Range rect，而不是整个元素
     // 如果已有 textNode+offset，构造临时 Range 取词的精确位置
@@ -163,8 +163,11 @@
         }
       }
     } catch (err) {}
-    // 回退：用整个元素
-    if (!anchorRect) anchorRect = wordEl.getBoundingClientRect();
+    // 回退：用整个元素（可能已脱离 DOM）
+    if (!anchorRect && wordEl && wordEl.getBoundingClientRect) {
+      anchorRect = wordEl.getBoundingClientRect();
+    }
+    if (!anchorRect) return; // 无可定位元素，放弃
 
     const fRect = floatEl.getBoundingClientRect();
     let left = anchorRect.left + anchorRect.width / 2 - fRect.width / 2;
@@ -204,7 +207,7 @@
     showFloat(clickedEl, word, "…", textNode, offset);
     try {
       const resp = await sendMsg({ type: "translate", word, sentence });
-      const info = resp || { translation: "无结果", source: "error" };
+      const info = resp || { translation: "查不到（Google 可能被墙，请在设置页填 DeepSeek key）", source: "error" };
       showFloat(clickedEl, word, info.translation || "（无释义）", textNode, offset);
       sendMsg({ type: "record", word, translation: info.translation, sentence });
       highlightWordInNode(clickedEl, word);
