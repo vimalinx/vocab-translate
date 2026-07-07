@@ -40,7 +40,7 @@ function render() {
 
   list.forEach((w, i) => {
     const tr = document.createElement("tr");
-    const sentences = (w.sentences || []).map((s) => escapeHtml(s)).join("<br>");
+    const sentences = (w.sentences || []).map((s) => escapeHtml(s)).join("；");
     const barWidth = Math.round(((w.count || 0) / maxCount) * 60);
     tr.innerHTML = `
       <td style="color:var(--ink-faint);font-family:'Geist Mono',monospace;font-size:11px">${i + 1}</td>
