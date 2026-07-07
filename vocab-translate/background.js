@@ -213,15 +213,29 @@ async function translateByDeepSeek(word, cfg, sentence) {
   return { translation: content, source: "DeepSeek" };
 }
 
+// 带超时的 fetch（SW fetch 可能挂起不返回）
+async function fetchWithTimeout(url, opts = {}, ms = 8000) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    const res = await fetch(url, { ...opts, signal: ctrl.signal });
+    clearTimeout(timer);
+    return res;
+  } catch (e) {
+    clearTimeout(timer);
+    throw e;
+  }
+}
+
 // Google Translate：有语境时整句翻译优先（自动消歧），无语境时查词典义
 async function translateByGoogle(word, sentence) {
   try {
-    // 1) 单词词典义（始终查，作为基础释义）
+    // 1) 单词词典义
     const url =
       "https://translate.googleapis.com/translate_a/single?client=gtx" +
       "&sl=en&tl=zh-CN&dt=t&dt=bd&q=" + encodeURIComponent(word);
     console.log("[VT] Google fetch start:", word);
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetchWithTimeout(url, { method: "GET" }, 8000);
     console.log("[VT] Google fetch done:", res.status);
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
@@ -239,30 +253,29 @@ async function translateByGoogle(word, sentence) {
     }
     if (defs.length && defs.join("；").length < 200) wordTrans = wordTrans || defs.join("；");
 
-    // 2) 有上下文：整句翻译（Google 在整句级别自动消歧）
+    // 2) 有上下文：整句翻译
     if (sentence && sentence.length > 5) {
       try {
         const sUrl =
           "https://translate.googleapis.com/translate_a/single?client=gtx" +
           "&sl=en&tl=zh-CN&dt=t&q=" + encodeURIComponent(sentence);
-        const sRes = await fetch(sUrl, { method: "GET" });
+        const sRes = await fetchWithTimeout(sUrl, { method: "GET" }, 8000);
         if (sRes.ok) {
           const sData = await sRes.json();
           let sentTrans = "";
           if (Array.isArray(sData) && Array.isArray(sData[0])) {
             sentTrans = sData[0].map((s) => (s && s[0] ? s[0] : "")).join("").trim();
           }
-          // 整句翻译作为主释义（含语境义），单词义作为补充
-          if (sentTrans) {
-            return { translation: wordTrans + "\n" + sentTrans, source: "Google" };
-          }
+          if (sentTrans) return { translation: wordTrans + "\n" + sentTrans, source: "Google" };
         }
-      } catch (e) { /* 整句翻译失败则只返回单词义 */ }
+      } catch (e) { console.log("[VT] sentence translate failed:", e.message); }
     }
 
     return { translation: wordTrans || "（无释义）", source: "Google" };
   } catch (e) {
-    return { translation: "翻译失败：" + e.message, source: "error" };
+    const reason = e.name === "AbortError" ? "请求超时（8秒），网络或代理问题" : e.message;
+    console.warn("[VT] Google failed:", reason);
+    return { translation: "翻译失败：" + reason, source: "error" };
   }
 }
 
