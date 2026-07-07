@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Vocab Translate Showcase</title>
+<style>
+  :root {
+    --forest: #0d1f17;
+    --forest-2: #143223;
+    --paper: #f5f1e8;
+    --paper-2: #ebe5d6;
+    --ink: #1a1a1a;
+    --soft: #5a554c;
+    --line: #d0c8b5;
+    --accent: #d4471f;
+    --green: #2d7a3f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    width: 1280px;
+    height: 820px;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 78% 12%, rgba(212, 71, 31, 0.18), transparent 28%),
+      linear-gradient(135deg, var(--forest), #07130e 48%, #1a2f23 100%);
+    color: var(--ink);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  .stage {
+    display: grid;
+    grid-template-columns: 390px 1fr;
+    gap: 36px;
+    padding: 48px 70px;
+    height: 100%;
+  }
+  .hero {
+    color: var(--paper);
+    padding-top: 28px;
+  }
+  .mark {
+    color: var(--accent);
+    font-size: 78px;
+    font-style: italic;
+    line-height: 0.9;
+    margin-bottom: 32px;
+  }
+  .hero h1 {
+    margin: 0;
+    font-size: 62px;
+    line-height: 0.95;
+    font-weight: 400;
+    letter-spacing: -0.04em;
+  }
+  .hero p {
+    margin: 24px 0 0;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: rgba(245, 241, 232, 0.74);
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 9px;
+    margin-top: 34px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+  }
+  .badge {
+    border: 1px solid rgba(245, 241, 232, 0.18);
+    color: rgba(245, 241, 232, 0.82);
+    padding: 7px 10px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .panel {
+    background: var(--paper);
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 36px 100px rgba(0,0,0,0.42);
+    display: grid;
+    grid-template-columns: 190px 1fr;
+    min-height: 640px;
+  }
+  .side {
+    background: #092117;
+    color: rgba(255,255,255,0.82);
+    padding: 26px 18px;
+    display: flex;
+    flex-direction: column;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 42px; }
+  .brand .v { color: var(--accent); font-size: 34px; font-style: italic; }
+  .brand .name { font-size: 22px; }
+  .navlabel {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 10px;
+    color: rgba(255,255,255,0.34);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin: 20px 0 10px;
+  }
+  .nav {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    padding: 10px 12px;
+    margin: 2px -8px;
+    font-size: 14px;
+    color: rgba(255,255,255,0.62);
+  }
+  .nav.active {
+    color: white;
+    background: var(--forest-2);
+    border-left: 3px solid var(--accent);
+  }
+  .main {
+    padding: 28px 42px;
+  }
+  .topline {
+    display: flex;
+    align-items: start;
+    justify-content: space-between;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  h2 {
+    margin: 0;
+    font-size: 36px;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+  }
+  .hint {
+    margin-top: 6px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    color: var(--soft);
+    font-size: 14px;
+  }
+  .pill {
+    border: 1px solid var(--line);
+    padding: 8px 12px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 12px;
+    color: var(--accent);
+    background: white;
+    white-space: nowrap;
+  }
+  .reader {
+    position: relative;
+    background: white;
+    border: 1px solid var(--line);
+    padding: 18px 24px 22px;
+    margin-bottom: 16px;
+  }
+  .reader p {
+    margin: 0;
+    font-size: 21px;
+    line-height: 1.48;
+    color: #302c25;
+  }
+  .word {
+    color: var(--accent);
+    border-bottom: 2px solid rgba(212, 71, 31, 0.4);
+    padding-bottom: 1px;
+  }
+  .float {
+    position: absolute;
+    left: 330px;
+    top: 18px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    box-shadow: 0 18px 45px rgba(0,0,0,0.16);
+    padding: 12px 14px;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    width: 270px;
+  }
+  .float b { color: var(--accent); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border: 1px solid var(--line);
+    font-family: "Helvetica Neue", Arial, sans-serif;
+  }
+  th {
+    text-align: left;
+    font-size: 11px;
+    color: #8a8172;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--line);
+    padding: 9px 12px;
+    font-weight: 500;
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    font-size: 14px;
+  }
+  tr:last-child td { border-bottom: 0; }
+  .term {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 21px;
+    color: #1f1d18;
+  }
+  .freq {
+    display: inline-block;
+    min-width: 46px;
+    height: 7px;
+    background: linear-gradient(90deg, var(--accent), rgba(212,71,31,0.2));
+  }
+  .quiz {
+    margin-top: 14px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--line);
+    padding: 13px 16px;
+    min-height: 94px;
+  }
+  .card .label {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    font-size: 11px;
+    color: #8a8172;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .card .question {
+    font-size: 17px;
+    line-height: 1.3;
+  }
+  .answer {
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    margin-top: 10px;
+    color: var(--green);
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <section class="hero">
+      <div class="mark">V</div>
+      <h1>Vocab<br />Translate</h1>
+      <p>Click words while reading English pages, get Chinese meanings in context, and turn every lookup into a durable vocabulary review loop.</p>
+      <div class="badges">
+        <span class="badge">MV3 Extension</span>
+        <span class="badge">Vimalinx Login</span>
+        <span class="badge">DeepSeek</span>
+        <span class="badge">Recall Quiz</span>
+      </div>
+    </section>
+    <section class="panel">
+      <aside class="side">
+        <div class="brand"><span class="v">V</span><span class="name">Vocab</span></div>
+        <div class="navlabel">Library</div>
+        <div class="nav active">Lexicon</div>
+        <div class="nav">Recall Test</div>
+        <div class="navlabel">System</div>
+        <div class="nav">Settings</div>
+      </aside>
+      <main class="main">
+        <div class="topline">
+          <div>
+            <h2>Context-first vocabulary</h2>
+            <div class="hint">Definitions, source sentences, lookup frequency, and review flow.</div>
+          </div>
+          <div class="pill">deepseek-v4-flash / Google fallback</div>
+        </div>
+        <div class="reader">
+          <p>Gene <span class="word">expression</span> was upregulated after treatment, while unrelated signals remained stable.</p>
+          <div class="float"><b>expression</b><br />/ɪkˈspreʃn/<br />名词 （基因）表达</div>
+        </div>
+        <table>
+          <thead><tr><th>Word</th><th>Definition</th><th>Freq</th><th>Context</th></tr></thead>
+          <tbody>
+            <tr><td class="term">expression</td><td>名词 （基因）表达</td><td><span class="freq"></span> 8</td><td>Gene expression was upregulated...</td></tr>
+            <tr><td class="term">serendipity</td><td>意外发现美好事物的能力</td><td><span class="freq" style="width:34px"></span> 5</td><td>A serendipity moment changed...</td></tr>
+            <tr><td class="term">resilient</td><td>有复原力的；适应力强的</td><td><span class="freq" style="width:24px"></span> 3</td><td>The system became resilient...</td></tr>
+          </tbody>
+        </table>
+        <div class="quiz">
+          <div class="card">
+            <div class="label">Recall prompt</div>
+            <div class="question">Gene ____ was upregulated after treatment.</div>
+            <div class="answer">Correct: （基因）表达</div>
+          </div>
+          <div class="card">
+            <div class="label">Local storage</div>
+            <div class="question">Words stay in chrome.storage.local with source sentences and frequency.</div>
+            <div class="answer">Clear anytime from the extension popup.</div>
+          </div>
+        </div>
+      </main>
+    </section>
+  </div>
+</body>
+</html>

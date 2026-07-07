@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=DM+Mono:wght@400;500&display=swap');
 :root {
   --forest: #0d1f17; --forest-2: #122a1f;
   --paper: #f5f1e8; --paper-2: #ebe5d6; --paper-3: #e0d8c4;
@@ -12,33 +12,33 @@
   --line: #d0c8b5;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: "Geist", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--paper); color: var(--ink); font-size: 14.5px; width: 320px; -webkit-font-smoothing: antialiased; }
+body { font-family: "DM Sans", -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--paper); color: var(--ink); font-size: 16px; width: 340px; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
 .header { display: flex; align-items: center; gap: 10px; padding: 16px 16px 14px; border-bottom: 1px solid var(--line); }
-.header .mark { font-family: "Instrument Serif", serif; font-size: 26px; color: var(--accent); line-height: 1; font-style: italic; }
-.header .name { font-family: "Instrument Serif", serif; font-size: 18px; font-weight: 400; letter-spacing: 0.01em; }
-.header .ver { font-family: "Geist Mono", monospace; font-size: 9px; color: var(--ink-faint); margin-left: auto; text-transform: uppercase; letter-spacing: 0.1em; }
+.header .mark { font-family: "Source Serif 4", serif; font-size: 28px; color: var(--accent); line-height: 1; font-style: italic; font-weight: 700; }
+.header .name { font-family: "Source Serif 4", serif; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; }
+.header .ver { font-family: "DM Mono", monospace; font-size: 10px; color: var(--ink-faint); margin-left: auto; text-transform: uppercase; letter-spacing: 0.1em; }
 .lookup { display: flex; gap: 6px; padding: 12px 16px 8px; }
 .lookup input {
-  flex: 1; padding: 7px 10px; border: 1px solid var(--line); background: white; color: var(--ink);
-  font-family: inherit; font-size: 15px; outline: none; border-radius: 0; transition: border-color 0.12s;
+  flex: 1; padding: 9px 12px; border: 1px solid var(--line); background: white; color: var(--ink);
+  font-family: inherit; font-size: 16.5px; outline: none; border-radius: 0; transition: border-color 0.12s;
 }
 .lookup input:focus { border-color: var(--accent); }
 .lookup input::placeholder { color: var(--ink-faint); }
 .lookup button {
-  padding: 7px 12px; border: 1px solid var(--accent); background: var(--accent); color: white;
-  font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; border-radius: 0; transition: background 0.12s;
+  padding: 9px 14px; border: 1px solid var(--accent); background: var(--accent); color: white;
+  font-family: inherit; font-size: 15px; font-weight: 600; cursor: pointer; border-radius: 0; transition: background 0.12s;
 }
 .lookup button:hover { background: #b83a16; border-color: #b83a16; }
-.result { margin: 0 16px; padding: 12px 14px; background: white; border: 1px solid var(--line); min-height: 28px; white-space: pre-wrap; font-size: 14.5px; line-height: 1.6; color: var(--ink); }
-.stat { font-family: "Geist Mono", monospace; font-size: 11px; color: var(--ink-faint); margin: 8px 16px 4px; padding-bottom: 10px; border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: 0.1em; }
+.result { margin: 0 16px; padding: 14px 16px; background: white; border: 1px solid var(--line); min-height: 32px; white-space: pre-wrap; font-size: 16px; line-height: 1.65; color: var(--ink); }
+.stat { font-family: "DM Mono", monospace; font-size: 12px; color: var(--ink-faint); margin: 8px 16px 4px; padding-bottom: 10px; border-bottom: 1px solid var(--line); text-transform: uppercase; letter-spacing: 0.1em; }
 .stat strong { color: var(--accent); font-weight: 500; }
 .links { padding: 6px 8px 10px; }
 .links a {
-  display: flex; align-items: center; gap: 10px; padding: 8px 10px;
-  text-decoration: none; color: var(--ink); font-size: 14.5px; border-radius: 0; transition: background 0.1s;
+  display: flex; align-items: center; gap: 10px; padding: 10px 10px;
+  text-decoration: none; color: var(--ink); font-size: 16px; border-radius: 0; transition: background 0.1s;
 }
 .links a:hover { background: var(--paper-2); }
-.links a .ico { width: 14px; text-align: center; opacity: 0.5; font-size: 13px; }
+.links a .ico { width: 16px; text-align: center; opacity: 0.5; font-size: 15px; }
 .links a:hover .ico { opacity: 1; }
 .links a.danger { color: var(--accent); }
 </style>
