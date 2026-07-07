@@ -14,7 +14,12 @@
   tr.editing .edit-input { display: block; }
   .empty-state { text-align: center; padding: 80px 20px; color: var(--ink-faint); }
   .empty-state .glyph { font-family: "Source Serif 4", serif; font-size: 52px; color: var(--line); font-style: italic; margin-bottom: 16px; }
-  .table-wrap { background: white; border: 1px solid var(--line); }
+  .table-wrap { background: white; border: 1px solid var(--line); overflow-x: auto; max-width: 100%; }
+  .lexicon-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  .lexicon-title { display: flex; align-items: baseline; gap: 12px; }
+  .lexicon-title h1 { font-family: "Source Serif 4", serif; font-size: 32px; font-weight: 700; letter-spacing: -0.02em; margin: 0; }
+  .lexicon-sub { font-size: 14px; color: var(--ink-soft); }
+  .lexicon-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -35,20 +40,21 @@
   </aside>
 
   <main class="main">
-    <div class="page-header">
-      <h1>Lexicon</h1>
-      <p id="sub">Loading…</p>
-    </div>
-    <div class="toolbar">
-      <input type="search" id="filter" class="input" placeholder="Filter words or meanings…" style="width:260px" />
-      <select id="sort" class="select">
-        <option value="count">By frequency</option>
-        <option value="last">Most recent</option>
-        <option value="word">Alphabetical</option>
-      </select>
-      <div class="spacer"></div>
-      <button class="btn" id="openQuiz">Test recall</button>
-      <button class="btn" id="export">Export</button>
+    <div class="lexicon-header">
+      <div class="lexicon-title">
+        <h1>Lexicon</h1>
+        <span id="sub" class="lexicon-sub">Loading…</span>
+      </div>
+      <div class="lexicon-controls">
+        <input type="search" id="filter" class="input" placeholder="Filter…" style="width:200px" />
+        <select id="sort" class="select">
+          <option value="count">By frequency</option>
+          <option value="last">Most recent</option>
+          <option value="word">Alphabetical</option>
+        </select>
+        <button class="btn" id="openQuiz">Recall</button>
+        <button class="btn" id="export">Export</button>
+      </div>
     </div>
     <div class="table-wrap">
       <table id="tbl" class="table">
