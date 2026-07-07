@@ -43,13 +43,13 @@ function render() {
     const sentences = (w.sentences || []).map((s) => escapeHtml(s)).join("；");
     const barWidth = Math.round(((w.count || 0) / maxCount) * 60);
     tr.innerHTML = `
-      <td style="color:var(--ink-faint);font-family:'Geist Mono',monospace;font-size:11px">${i + 1}</td>
+      <td style="color:var(--ink-faint);font-family:'DM Mono',monospace;font-size:13px">${i + 1}</td>
       <td class="word-cell">${escapeHtml(w.word)}</td>
       <td>
         <div class="translation-text view">${escapeHtml(w.translation || "—")}</div>
         <textarea class="edit-input edit">${escapeHtml(w.translation || "")}</textarea>
       </td>
-      <td style="text-align:center;font-family:'Geist Mono',monospace;font-size:12px"><span class="freq-bar" style="width:${barWidth}px"></span>${w.count || 0}</td>
+      <td style="text-align:center;font-family:'DM Mono',monospace;font-size:14px"><span class="freq-bar" style="width:${barWidth}px"></span>${w.count || 0}</td>
       <td><div class="sentence-text">${sentences || "—"}</div></td>
       <td class="action" style="white-space:nowrap">
         <button class="btn btn-sm btn-ghost edit-btn">Edit</button>
